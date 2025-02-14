@@ -1,7 +1,8 @@
-
 #!/bin/bash
-echo "Installing Slyce AI dependencies..."
-sudo apt update && sudo apt install python3 python3-pip -y
-pip3 install -r requirements.txt
-echo "Installation complete."
+echo "Installing dependencies for Slicenet..."
+sudo apt update && sudo apt upgrade -y
+sudo apt install python3 python3-pip -y
+pip install flask requests
 
+echo "Starting Slicenet AI..."
+python3 server.py
