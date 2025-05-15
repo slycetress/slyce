@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Slyce GitHub Sync Interface</title>
+  <style>
+    body { font-family: monospace; background: #111; color: #0f0; padding: 1em; }
+    #log { white-space: pre-wrap; border: 1px solid #0f0; padding: 1em; max-height: 500px; overflow-y: scroll; }
+    button { margin-top: 1em; padding: 0.5em; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Slyce GitHub Sync Console</h1>
+  <div id="log">Press "Run Sync" to begin...</div>
+  <button onclick="runSync()">🔁 Run Sync</button>
+
+  <script>
+    function runSync() {
+      document.getElementById("log").innerText = "⚙️ Attempting sync...\n";
+
+      // Web-based JavaScript can't run shell directly — but we can use this as a frontend for Electron or Tauri apps,
+      // or call local servers via HTTP request.
+
+      // Placeholder for now:
+      document.getElementById("log").innerText += "🔒 Browser security prevents direct .sh/.bat execution.\n";
+      document.getElementById("log").innerText += "👉 Use this interface with an Electron shell or Python web backend.\n";
+    }
+  </script>
+</body>
+</html>
