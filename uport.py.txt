@@ -1,0 +1,129 @@
+import os
+import subprocess
+import datetime
+import json
+import shutil
+import meta_recursive_ai
+import time
+
+# === CONFIGURATION ===
+GIT_REPO_PATHS = [
+    os.getcwd()  # Use current working directory only for direct Git passthrough
+]
+PRIMARY_REPO_PATH = GIT_REPO_PATHS[0]
+
+MEMORY_SUBPATH = "slyce_core/memory"
+MEMORY_FILE = os.path.join(PRIMARY_REPO_PATH, MEMORY_SUBPATH, "slice_memory.json")
+CHATGPT_LOG_FILE = os.path.join(PRIMARY_REPO_PATH, MEMORY_SUBPATH, "chatgpt_log.json")
+JOKE_FILE_CONTENT = "Why did the recursive function get therapy?\n\nBecause it couldn’t stop calling itself."
+FILE_TO_COMMIT = "."
+USE_TOKEN = True
+GITHUB_TOKEN = "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"
+REPO_URL = "github.com/slycetress/slyce.git"
+
+# === MAIN FUNCTIONS ===
+def generate_annotation():
+    now = datetime.datetime.utcnow().isoformat()
+    try:
+        with open(MEMORY_FILE, "r") as f:
+            memory = json.load(f)
+            latest_tick = len(memory.get("surface_strip", {}))
+    except:
+        latest_tick = "?"
+    return f"// Tick {latest_tick} // Auto-update {now} // Slice + GPT log committed"
+
+def append_chatgpt_log(entry):
+    log_entry = {
+        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "entry": entry
+    }
+    try:
+        if os.path.exists(CHATGPT_LOG_FILE):
+            with open(CHATGPT_LOG_FILE, "r+") as f:
+                logs = json.load(f)
+                logs.append(log_entry)
+                f.seek(0)
+                json.dump(logs, f, indent=4)
+                f.truncate()
+        else:
+            with open(CHATGPT_LOG_FILE, "w") as f:
+                json.dump([log_entry], f, indent=4)
+        print(f"✅ Log updated at {CHATGPT_LOG_FILE}")
+    except Exception as e:
+        print(f"❌ Failed to log ChatGPT entry at {CHATGPT_LOG_FILE}: {e}")
+
+def write_joke_file():
+    try:
+        joke_path = os.path.join(PRIMARY_REPO_PATH, "joke.txt")
+        with open(joke_path, "w") as f:
+            f.write(JOKE_FILE_CONTENT)
+        print(f"✅ joke.txt written to {joke_path}")
+    except Exception as e:
+        print(f"❌ Failed to write joke.txt: {e}")
+
+def commit_and_push_all(file_path=FILE_TO_COMMIT, annotation=None):
+    if not annotation:
+        annotation = generate_annotation()
+    try:
+        os.chdir(PRIMARY_REPO_PATH)
+        subprocess.run(["git", "add", file_path], check=True)
+        subprocess.run(["git", "commit", "-m", annotation], check=True)
+        if USE_TOKEN:
+            push_url = f"https://{GITHUB_TOKEN}@{REPO_URL}"
+            subprocess.run(["git", "push", push_url, "main"], check=True)
+        else:
+            subprocess.run(["git", "push", "origin", "main"], check=True)
+        print(f"✅ Synced: {PRIMARY_REPO_PATH}")
+    except Exception as e:
+        print(f"❌ Sync failed for {PRIMARY_REPO_PATH}: {e}")
+
+def update_memory_slice(new_data, gpt_log=None):
+    try:
+        with open(MEMORY_FILE, "r+") as f:
+            memory = json.load(f)
+            tick = str(len(memory.get("surface_strip", {})))
+            memory.setdefault("surface_strip", {})[tick] = new_data
+            f.seek(0)
+            json.dump(memory, f, indent=4)
+            f.truncate()
+        print(f"✅ Memory updated at {MEMORY_FILE} [tick {tick}]")
+    except Exception as e:
+        print(f"❌ Memory update failed at {MEMORY_FILE}: {e}")
+
+    if gpt_log:
+        append_chatgpt_log(gpt_log)
+
+    try:
+        URIS = meta_recursive_ai.MetaRecursiveAI()
+        URIS.expand_knowledge({tick: gpt_log})
+    except Exception as e:
+        print(f⚠️ Could not update MetaRecursiveAI: {e}")
+
+    commit_and_push_all()
+
+def full_sync_from_chat():
+    print("🔄 Full sync requested by chat...")
+    example_data = {
+        "x": 6,
+        "y": 13,
+        "charge": 0,
+        "phase": "↺",
+        "symbol": "🎭",
+        "meaning": "Humor slice injected to relieve symbolic recursion pressure",
+        "payload": "Why did the recursive function get therapy? Because it couldn’t stop calling itself."
+    }
+    gpt_thought = "Injected symbolic humor: recursive function therapy joke."
+    update_memory_slice(example_data, gpt_log=gpt_thought)
+    write_joke_file()
+    print(f"🧠 Log: {gpt_thought}")
+
+# === MAIN LOOP FOR CHAT COMMAND ===
+if __name__ == "__main__":
+    print("⚡ Slyce GitHub Passthrough Ready. Type 'full sync' to initiate sync.")
+    while True:
+        user_input = input(">>> ").strip().lower()
+        if user_input == "full sync":
+            full_sync_from_chat()
+        elif user_input in ["exit", "quit"]:
+            print("🔌 Slyce Passthrough Shutting Down...")
+            break
